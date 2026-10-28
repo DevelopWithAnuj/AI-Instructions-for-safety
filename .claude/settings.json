@@ -2,38 +2,60 @@
   "permissions": {
     "defaultMode": "plan",
     "allow": ["Read", "Glob", "Grep"],
-    "ask": ["Bash", "Write", "Edit", "MultiEdit", "NotebookEdit", "WebFetch", "WebSearch"],
+    "ask": [
+      "Bash",
+      "Write",
+      "Edit",
+      "MultiEdit",
+      "NotebookEdit",
+      "WebFetch",
+      "WebSearch"
+    ],
     "deny": [
-      "Bash(git)",
-      "Bash(git *)",
       "Bash(gh *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git pull *)",
+      "Bash(git fetch *)",
+      "Bash(git merge *)",
+      "Bash(git rebase *)",
+      "Bash(git reset *)",
+      "Bash(git checkout *)",
+      "Bash(git switch *)",
+      "Bash(git restore *)",
+      "Bash(git stash *)",
+      "Bash(git tag *)",
+      "Bash(git clean *)",
+      "Bash(git rm *)",
+      "Bash(git mv *)",
+      "Bash(git cherry-pick *)",
+      "Bash(git revert *)",
+      "Bash(git clone *)",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git config *)",
       "Bash(rm *)",
       "Bash(rmdir *)",
       "Bash(psql *)",
       "Bash(mysql *)",
       "Bash(sqlite3 *)",
       "Bash(mongosh *)",
-      "Bash(redis-cli *)"
+      "Bash(redis-cli *)",
+      "Bash(docker exec *)",
+      "Bash(curl *)",
+      "Bash(wget *)",
+      "Bash(ssh *)"
     ]
   },
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash|Write|Edit|MultiEdit|NotebookEdit|Read|Glob|Grep",
+        "matcher": "Bash|Write|Edit|MultiEdit|NotebookEdit|Read|Glob|Grep|WebFetch|WebSearch|Artifact|mcp__.*",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.agents/hooks/guard.py\"",
-            "timeout": 10
-          }
-        ]
-      },
-      {
-        "matcher": "mcp__.*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.agents/hooks/guard.py\"",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.agents/hooks/guard.py\" || exit 2",
             "timeout": 10
           }
         ]

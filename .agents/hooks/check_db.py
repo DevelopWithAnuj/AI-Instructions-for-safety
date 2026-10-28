@@ -1,4 +1,5 @@
-"""Guardrail 3: never touch the database directly, never delete data."""
+"""Guardrail 3: never touch the database directly, never delete data.
+This is blocked always, even after the user approves."""
 import re
 from common import block
 
@@ -11,11 +12,21 @@ TOOLS = re.compile(
     r"|knex\s+(migrate|seed)|sequelize(-cli)?\s+db|typeorm\s+(migration|schema)|flask\s+db"
     r"|manage\.py\s+(migrate|flush|dbshell|sqlflush|loaddata|sqlmigrate)"
     r"|artisan\s+(migrate|db:)|(rails|rake)\s+db:|wrangler\s+d1|firebase\s+(firestore|database)"
-    r"|(?<![\w-])(turso|neonctl|pscale)(?![\w-])",
+    r"|(?<![\w-])(turso|neonctl|pscale|flyway|liquibase|dbmate|mikro-orm)(?![\w-])"
+    r"|sqlx\s+(migrate|database)|atlas\s+(migrate|schema)",
     re.I)
 SQL = re.compile(
     r"\b(drop|truncate)\s+(table|database|schema|index|view|column|user|role)\b"
     r"|\bdelete\s+from\b|\balter\s+table\b",
+    re.I)
+NOSQL = re.compile(
+    r"\b(flushall|flushdb)\b"
+    r"|\.(deleteMany|deleteOne|dropDatabase|dropCollection|findOneAndDelete)\s*\("
+    r"|\bdb\.\w+\.(drop|remove)\s*\("
+    r"|\bredis\w*\.(del|unlink|flushall|flushdb)\b",
+    re.I)
+CONTAINER_EXEC = re.compile(
+    r"(?<![\w-])(docker|docker-compose|podman|nerdctl|kubectl|oc)(?![\w-])[^;|&\n]*\b(exec|attach)\b",
     re.I)
 URL = re.compile(r"\b(postgres(ql)?|mysql|mongodb(\+srv)?|rediss?|mssql|sqlserver)://", re.I)
 MCP = re.compile(
@@ -34,10 +45,13 @@ def check(ctx):
             block("database tools and migrations are not allowed without the user.")
         if SQL.search(cmd):
             block("destructive SQL (DROP, TRUNCATE, DELETE FROM, ALTER) is not allowed.")
+        if NOSQL.search(cmd):
+            block("Mongo or Redis delete and flush operations are not allowed.")
+        if CONTAINER_EXEC.search(cmd):
+            block("docker exec and similar can reach the database. Not allowed.")
         if URL.search(cmd):
             block("database connection strings are not allowed in commands.")
-    tool = ctx["tool"]
-    if tool.lower().startswith("mcp") and MCP.search(tool):
+    if ctx["is_mcp"] and MCP.search(ctx["tool"]):
         block("database tools (MCP) are not allowed.")
     for p in ctx["paths"]:
         if DBFILE.search(p):

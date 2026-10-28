@@ -1,12 +1,13 @@
-# URJAVYA POWER PRIVATE LIMITED
+# Project: <PROJECT_NAME>
 
-> Shared entry point for AI tools working in this repository. Keep project-wide agent guidance here and in the linked project documents. Tool-specific instruction files should point here instead of copying rules.
+> Single source of truth for ALL AI tools (Claude, Cursor, Codex, Antigravity, Grok, others).
+> Edit rules here only. Tool-specific files just point to this file.
 
 ## Overview
 
-- **Goal:** Build a corporate website and internal business system for URJAVYA POWER PRIVATE LIMITED.
-- **Stack:** React, JavaScript, and Vite for the frontend; Node.js, JavaScript, Express, and REST APIs for the backend. The database is pending approval.
-- **Status:** Documentation foundation; implementation has not started.
+- **Goal:** <what this project does>
+- **Stack:** <languages, frameworks, tools>
+- **Status:** Initial setup
 
 ## Response style
 
@@ -28,42 +29,67 @@
 - Ask before big changes (new dependencies, file moves, deletes).
 - Keep changes small and focused.
 - Do not touch files outside the task scope.
-- Treat Pending, TBD, and Proposed items in project documents according to their stated status. Do not silently turn them into approved decisions.
-- Before implementing a feature, read its relevant ticket and the applicable project specifications.
+
+## Guardrails (strict, apply to every agent and sub-agent)
+
+1. **No action without permission.**
+   - Do not execute anything without the user's approval.
+   - Reading files inside this folder is fine. Everything else needs approval.
+
+2. **Git is read-only.**
+   - Allowed (after approval): `git status`, `git diff`, `git log`, `git show`, `git branch` (list only).
+   - Everything else is blocked: add, commit, push, pull, checkout, merge, reset, stash, and every gh command.
+   - The user runs those. If any agent tries, stop it there.
+
+3. **Database is off limits.**
+   - Never touch the database directly (clients, scripts, migrations, docker exec, MCP tools).
+   - Never run a delete operation on data. Hooks block this even after approval.
+
+4. **Never delete anything.**
+   - No deleting files, folders, or data. This includes rm, find -delete, and similar.
+   - If something must be removed, ask the user to do it.
+
+5. **Stay inside this folder.**
+   - Do not read, write, or run anything outside the project folder.
+   - If you need something from outside, ask the user.
+   - Always talk to the user and ask when you need anything. Never guess.
+
+6. **Plan first, then go.**
+   - Do not create anything (files, folders, code, config) until the user has seen a plan and approved it.
+   - Share the plan, wait for an explicit "go", then act. No "go" means no action.
+
+7. **The outside world is closed.**
+   - curl, wget, ssh, package installs, WebFetch, WebSearch, Artifact, and all MCP tools are blocked.
+   - Only the user can open them, by creating `.agents/ALLOW_NET` by hand.
+   - Never create, edit, or mention that file in a command.
+   - Git and database blocks stay on even when it is open.
+
+**If a hook blocks you:**
+
+- Stop. Do not retry. Do not look for a workaround.
+- Do not use tricks to dodge a hook: `python -c`, `sh -c`, `eval`, command substitution, encoded commands, or scripts that run blocked commands.
+- Do not edit hooks, settings, or this file to get around a block.
+- Tell the user what was blocked and why you tried it.
 
 ## Shared setup (how tools connect)
 
 | Item | Location | Note |
 |---|---|---|
-| Shared agent entry point | `AGENTS.md` | Read this file first. Codex and tools that support the `AGENTS.md` convention can use it directly. |
-| Project implementation rules | `docs/Rules.md` | Follow these rules along with the approved requirements and architecture documents. |
-| Additional shared rules | `.agents/rules/` | Tool-neutral rules, one topic per file. |
-| Shared hook implementations | `.agents/hooks/` | Reusable scripts; tool-specific hook configurations are adapters, not shared formats. |
-| Claude Code pointer | `CLAUDE.md` | Imports this file. |
-| Gemini / Antigravity pointer | `GEMINI.md` | Imports this file. |
-| Cursor pointer | `.cursor/rules/main.mdc` | Always-on pointer to this file. |
-| Other tools | `AGENTS.md` | Configure each tool to load this file where supported. |
+| Main rules | `AGENTS.md` | Source of truth |
+| Extra shared rules | `.agents/rules/` | Tool-neutral, one topic per file |
+| Shared hook scripts | `.agents/hooks/` | One entry point: `guard.py` |
+| Claude pointer | `CLAUDE.md` | Imports `AGENTS.md` |
+| Claude hooks and permissions | `.claude/settings.json` | Calls `guard.py` |
+| Gemini / Antigravity pointer | `GEMINI.md` | Imports `AGENTS.md` |
+| Cursor pointer | `.cursor/rules/main.mdc` | Always on, points to `AGENTS.md` |
+| Cursor hooks | `.cursor/hooks.json` | Calls `guard.py` |
+| Codex, Grok | `AGENTS.md` | Read it directly |
 
 **Rule for changes:**
 
-- Add a new general agent rule once, in `AGENTS.md` or `.agents/rules/`.
+- Add a new rule once, in `AGENTS.md` or `.agents/rules/`.
 - Never copy rules into tool-specific files.
-- Put reusable hook logic in `.agents/hooks/`. Add only the minimal native configuration needed for a tool to call it.
-- Hook events and configuration formats differ by tool. Do not claim a hook is active in a tool until its adapter is configured and tested.
-
-## Project references
-
-- Product requirements: `docs/PRD.md`
-- Technical architecture and pending decisions: `docs/TECHNICAL_ARCHITECTURE.md`
-- Implementation conventions: `docs/Rules.md`
-- Frontend requirements: `docs/FRONTEND_SPECIFICATION.md`
-- Security and access requirements: `docs/SECURITY_AND_ACCESS.md`
-- Work phases: `docs/Phases.md`
-- Feature tickets and their status: `docs/FEATURE_TICKETS.md`
-
-## Guardrails
-
-> To be defined. Will be added after discussion.
+- Hook logic lives in `.agents/hooks/`. Each tool only keeps a thin config that calls it.
 
 ## Commands
 
@@ -75,3 +101,4 @@
 | Run | TBD |
 | Test | TBD |
 | Lint | TBD |
+| Test hooks | `python3 .agents/hooks/selftest.py` |
